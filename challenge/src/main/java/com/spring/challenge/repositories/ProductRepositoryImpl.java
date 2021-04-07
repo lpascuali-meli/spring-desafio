@@ -1,6 +1,8 @@
 package com.spring.challenge.repositories;
 
 import com.spring.challenge.dtos.ProductDto;
+import com.spring.challenge.dtos.ProductForTicketDto;
+import com.spring.challenge.dtos.TicketDto;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.ResourceUtils;
 
@@ -14,9 +16,11 @@ import java.util.stream.Collectors;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final ArrayList<ProductDto> products;
+    private HashMap<Integer, ProductForTicketDto> productsInChart;
 
     public ProductRepositoryImpl(){
         products = new ArrayList<>();
+        productsInChart = new HashMap<>();
         loadDataBase();
     }
 
@@ -53,6 +57,33 @@ public class ProductRepositoryImpl implements ProductRepository {
             }
         }
         return productsFound;
+    }
+
+    @Override
+    public TicketDto createTicket(TicketDto ticket) {
+        for (ProductForTicketDto product: ticket.getArticles()) {
+            ProductForTicketDto productInChart = productsInChart.get(product.getProductId());
+            updateQuantity(product);
+            if (productInChart != null) {
+                productInChart.setQuantity(productInChart.getQuantity() + product.getQuantity());
+            } else {
+                productsInChart.put(product.getProductId(), product);
+            }
+        }
+        List<ProductForTicketDto> articles = new ArrayList<>();
+        for (Map.Entry<Integer, ProductForTicketDto> entry: productsInChart.entrySet()) {
+            articles.add(entry.getValue());
+        }
+        ticket.setArticles(articles);
+        return ticket;
+    }
+
+    private void updateQuantity(ProductForTicketDto productForTicket) {
+        for (ProductDto product: products) {
+            if (product.getProductId().equals(productForTicket.getProductId())) {
+                product.setQuantity(product.getQuantity() - productForTicket.getQuantity());
+            }
+        }
     }
 
     public void loadDataBase() {

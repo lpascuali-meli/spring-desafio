@@ -41,34 +41,51 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public TicketResponse createPurchaseRequest(OrderForTicketDto orderForTicket) throws ApiException {
+        // Tomo los articulos de la orden del cliente
         List<ProductForTicketDto> products = orderForTicket.getArticles();
+        // Obtengo los ids de los productos
         List<Integer> ids = products.stream().map(ProductForTicketDto::getProductId).collect(Collectors.toList());
-        HashMap<Integer, ProductDto> productToPurchase = productRepository.getProductsForPurchase(ids);
+        // Consulto los precios y cantidades disponibles de cada uno
+        HashMap<Integer, ProductDto> productsToPurchase = productRepository.getProductsForPurchase(ids);
         if (products.size() == 0) {
+            // Validación por lista de compras vacía
             throw new ApiException(HttpStatus.BAD_REQUEST, "Debe indicar los artículos que desea comprar.");
         }
-        if (productToPurchase.size() == 0) {
+        if (productsToPurchase.size() == 0) {
+            // Validación por productos no encontrados
             throw new ApiException(HttpStatus.BAD_REQUEST, "No se encontraron los productos que desea comprar.");
         }
+        // Creo el ticket nuevo
         TicketDto ticket = new TicketDto();
         ticket.setArticles(new ArrayList<ProductForTicketDto>());
+        // Recorro los productos de la orden
         for (ProductForTicketDto product: products) {
-            double price = productToPurchase.get(product.getProductId()).getPrice();
-            validateArticle(product, productToPurchase);
+            // Los valido
+            validateArticle(product, productsToPurchase);
+            // Si fue valido los agrego
             ticket.getArticles().add(product);
-            ticket.setTotal(ticket.getTotal() + (price * product.getQuantity()));
         }
+        // Creamos ID para el ticket
         ticket.setId(atomicLong.getAndAdd(1));
+        // Creamos ticket acumulado
+        TicketDto accumulatedTicket = productRepository.createTicket(ticket);
+        // Consultamos nuevamente precios (nuevos y viejos)
+        ids = accumulatedTicket.getArticles().stream().map(ProductForTicketDto::getProductId).collect(Collectors.toList());
+        productsToPurchase = productRepository.getProductsForPurchase(ids);
+        for (ProductForTicketDto product: accumulatedTicket.getArticles()) {
+            double price = productsToPurchase.get(product.getProductId()).getPrice();
+            accumulatedTicket.setTotal(accumulatedTicket.getTotal() + (price * product.getQuantity()));
+        }
         StatusCodeDto statusCodeDto = new StatusCodeDto(200, "La solicitud de compra se completó con éxito.");
-        return new TicketResponse(ticket, statusCodeDto);
+        return new TicketResponse(accumulatedTicket, statusCodeDto);
     }
 
-    private void validateArticle(ProductForTicketDto product, HashMap<Integer, ProductDto> productToPurchase) throws ApiException {
+    private void validateArticle(ProductForTicketDto product, HashMap<Integer, ProductDto> productsToPurchase) throws ApiException {
         if (product.getQuantity() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Debe especificar la cantidad del artículo "
                     + product.getName());
         }
-        ProductDto productToCompare = productToPurchase.get(product.getProductId());
+        ProductDto productToCompare = productsToPurchase.get(product.getProductId());
         if (productToCompare == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "No se encontró el producto " + product.getName());
         }
