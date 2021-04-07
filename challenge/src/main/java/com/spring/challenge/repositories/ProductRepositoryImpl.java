@@ -45,11 +45,14 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<ProductDto> getProductsForPurchase(List<Integer> ids) {
-        return products.stream()
-            .filter(product -> {
-                return ids.contains(product.getId());
-            }).collect(Collectors.toList());
+    public HashMap<Integer, ProductDto> getProductsForPurchase(List<Integer> ids) {
+        HashMap<Integer, ProductDto> productsFound = new HashMap<Integer, ProductDto>();
+        for (ProductDto product: products) {
+            if (ids.contains(product.getProductId())) {
+                productsFound.put(product.getProductId(), product);
+            }
+        }
+        return productsFound;
     }
 
     public void loadDataBase() {
@@ -66,7 +69,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         for (int i = 1; i < Objects.requireNonNull(result).size(); i++) {
             List<String> parameters = result.get(i);
             ProductDto productDto = new ProductDto();
-            productDto.setId(Integer.parseInt(parameters.get(0)));
+            productDto.setProductId(Integer.parseInt(parameters.get(0)));
             productDto.setName(parameters.get(1));
             productDto.setCategory(parameters.get(2));
             productDto.setBrand(parameters.get(3));

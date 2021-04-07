@@ -9,8 +9,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TicketDto {
-    private long id;
+public class OrderForTicketDto {
     private List<ProductForTicketDto> articles;
-    private double total;
 }

@@ -1,7 +1,6 @@
 package com.spring.challenge.controllers;
 
-import com.spring.challenge.dtos.ProductDto;
-import com.spring.challenge.dtos.TicketDto;
+import com.spring.challenge.dtos.*;
 import com.spring.challenge.exceptions.ApiException;
 import com.spring.challenge.services.ProductService;
 import org.springframework.http.HttpStatus;
@@ -27,9 +26,8 @@ public class ProductController {
     }
 
     @PostMapping("purchase-request")
-    public ResponseEntity<TicketDto> createPurchaseRequest(@RequestBody List<ProductDto> products) {
-        TicketDto ticket = productService.createPurchaseRequest(products);
-        return new ResponseEntity<TicketDto>(ticket, HttpStatus.OK);
-
+    public ResponseEntity<TicketResponse> createPurchaseRequest(@RequestBody OrderForTicketDto orderForTicket) throws ApiException {
+        TicketResponse ticket = productService.createPurchaseRequest(orderForTicket);
+        return new ResponseEntity<TicketResponse>(ticket, HttpStatus.OK);
     }
 }
