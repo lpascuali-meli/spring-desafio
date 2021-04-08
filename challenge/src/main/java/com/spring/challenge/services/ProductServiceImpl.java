@@ -20,6 +20,12 @@ public class ProductServiceImpl implements ProductService{
         atomicLong = new AtomicLong(1);
     }
 
+    /**
+     * Consulta productos por filtros, validando previamente los mismos
+     * @param filters
+     * @return Retorna los productos encontrados
+     * @throws ApiException
+     */
     @Override
     public List<ProductDto> getProductsByFilters(Map<String, String> filters) throws ApiException {
         Integer order = filters.get("order") != null ? Integer.parseInt(filters.get("order")) : null;
@@ -35,57 +41,69 @@ public class ProductServiceImpl implements ProductService{
             }
             orderList(result, order);
         }
-        if (result.size() == 0) { throw new ApiException(HttpStatus.BAD_REQUEST, "No se encontraron productos para los filtros aplicados.");}
+        if (result.size() == 0) { throw new ApiException(HttpStatus.NOT_FOUND, "No se encontraron productos para los filtros aplicados.");}
         return result;
     }
 
+    /**
+     * Crea una orden de compra, agregando los productos que ya estaban en el carrito
+     * @param orderForTicket
+     * @return Retorna el ticket creado
+     * @throws ApiException
+     */
     @Override
     public TicketResponse createPurchaseRequest(OrderForTicketDto orderForTicket) throws ApiException {
         // Tomo los articulos de la orden del cliente
-        List<ProductForTicketDto> products = orderForTicket.getArticles();
+        List<ProductForTicketDto> productsOfOrder = orderForTicket.getArticles();
         // Obtengo los ids de los productos
-        List<Integer> ids = products.stream().map(ProductForTicketDto::getProductId).collect(Collectors.toList());
+        List<Integer> ids = productsOfOrder.stream().map(ProductForTicketDto::getProductId).collect(Collectors.toList());
         // Consulto los precios y cantidades disponibles de cada uno
-        HashMap<Integer, ProductDto> productsToPurchase = productRepository.getProductsForPurchase(ids);
-        if (products.size() == 0) {
+        HashMap<Integer, ProductDto> productsInStock = productRepository.getProductsForPurchase(ids);
+        if (productsOfOrder.size() == 0) {
             // Validación por lista de compras vacía
             throw new ApiException(HttpStatus.BAD_REQUEST, "Debe indicar los artículos que desea comprar.");
         }
-        if (productsToPurchase.size() == 0) {
+        if (productsInStock.size() == 0) {
             // Validación por productos no encontrados
-            throw new ApiException(HttpStatus.BAD_REQUEST, "No se encontraron los productos que desea comprar.");
+            throw new ApiException(HttpStatus.NOT_FOUND, "No se encontraron los productos que desea comprar.");
         }
         // Creo el ticket nuevo
         TicketDto ticket = new TicketDto();
         ticket.setArticles(new ArrayList<ProductForTicketDto>());
         // Recorro los productos de la orden
-        for (ProductForTicketDto product: products) {
+        for (ProductForTicketDto product: productsOfOrder) {
             // Los valido
-            validateArticle(product, productsToPurchase);
+            validateArticle(product, productsInStock);
             // Si fue valido los agrego
             ticket.getArticles().add(product);
         }
         // Creamos ID para el ticket
         ticket.setId(atomicLong.getAndAdd(1));
         // Creamos ticket acumulado
-        TicketDto accumulatedTicket = productRepository.createTicket(ticket);
+        TicketDto accumulatedTicket = productRepository.mergeTicket(ticket);
         // Consultamos nuevamente precios (nuevos y viejos)
         ids = accumulatedTicket.getArticles().stream().map(ProductForTicketDto::getProductId).collect(Collectors.toList());
-        productsToPurchase = productRepository.getProductsForPurchase(ids);
+        productsInStock = productRepository.getProductsForPurchase(ids);
         for (ProductForTicketDto product: accumulatedTicket.getArticles()) {
-            double price = productsToPurchase.get(product.getProductId()).getPrice();
+            double price = productsInStock.get(product.getProductId()).getPrice();
             accumulatedTicket.setTotal(accumulatedTicket.getTotal() + (price * product.getQuantity()));
         }
         StatusCodeDto statusCodeDto = new StatusCodeDto(200, "La solicitud de compra se completó con éxito.");
         return new TicketResponse(accumulatedTicket, statusCodeDto);
     }
 
-    private void validateArticle(ProductForTicketDto product, HashMap<Integer, ProductDto> productsToPurchase) throws ApiException {
+    /**
+     * Valida un producto previo a agregar a la orden de compra
+     * @param product Producto a agregar
+     * @param productsInStock Productos en stock
+     * @throws ApiException
+     */
+    private void validateArticle(ProductForTicketDto product, HashMap<Integer, ProductDto> productsInStock) throws ApiException {
         if (product.getQuantity() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Debe especificar la cantidad del artículo "
                     + product.getName());
         }
-        ProductDto productToCompare = productsToPurchase.get(product.getProductId());
+        ProductDto productToCompare = productsInStock.get(product.getProductId());
         if (productToCompare == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "No se encontró el producto " + product.getName());
         }
@@ -100,7 +118,12 @@ public class ProductServiceImpl implements ProductService{
         }
     }
 
-    private void orderList(List<ProductDto> result, Integer order) {
+    /**
+     * Ordena la lista de productos según el criterio indicado
+     * @param products lista de productos encontrados
+     * @param order criterio de orenamiento
+     */
+    private void orderList(List<ProductDto> products, Integer order) {
         Comparator<ProductDto> comparator;
         switch (order) {
             case 0:
@@ -118,9 +141,10 @@ public class ProductServiceImpl implements ProductService{
             default:
                 comparator = null;
         }
-        result.sort(comparator);
+        products.sort(comparator);
     }
 
+    // Comparadores para cada criterios de ordenamiento
     private Comparator<ProductDto> ascAlphabetic() {
         return new Comparator<ProductDto>() {
             @Override
