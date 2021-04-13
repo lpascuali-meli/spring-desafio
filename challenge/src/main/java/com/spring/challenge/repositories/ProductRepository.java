@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ProductRepository {
-    public List<ProductDto> getProductsByFilters(Map<String, String> filters);
+    public List<ProductDto> getProducts();
     public HashMap<Integer, ProductDto> getProductsForPurchase(List<Integer> ids);
 
     TicketDto mergeTicket(TicketDto ticket) throws ApiException;

@@ -1,0 +1,42 @@
+[
+  {
+    "productId": 1,
+    "name": "Desmalezadora",
+    "category": "Herramientas",
+    "brand": "Makita",
+    "price": 9600.0,
+    "quantity": 5,
+    "freeShipping": true,
+    "prestige": 4
+  },
+  {
+    "productId": 2,
+    "name": "Taladro",
+    "category": "Herramientas",
+    "brand": "Black & Decker",
+    "price": 12500.0,
+    "quantity": 7,
+    "freeShipping": true,
+    "prestige": 4
+  },
+  {
+    "productId": 3,
+    "name": "Soldadora",
+    "category": "Indumentaria",
+    "brand": "Taverniti",
+    "price": 2300.0,
+    "quantity": 2,
+    "freeShipping": false,
+    "prestige": 3
+  },
+  {
+    "productId": 4,
+    "name": "Chomba",
+    "category": "Indumentaria",
+    "brand": "Taverniti",
+    "price": 2400.0,
+    "quantity": 6,
+    "freeShipping": false,
+    "prestige": 3
+  }
+]

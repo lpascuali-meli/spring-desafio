@@ -34,9 +34,28 @@ public class ProductServiceImpl implements ProductService{
             throw new ApiException(HttpStatus.BAD_REQUEST, "No puede ingresar más de dos filtros.");
         }
         List<ProductDto> result;
-        result = productRepository.getProductsByFilters(filters);
+        result = productRepository.getProducts().stream()
+                .filter(product -> {
+                    boolean matches = true;
+                    if (filters.get("name") != null) {
+                        matches = product.getName().equals(filters.get("name"));
+                    }
+                    if (filters.get("brand") != null) {
+                        matches = matches && product.getBrand().equals(filters.get("brand"));
+                    }
+                    if (filters.get("category") != null) {
+                        matches = matches && product.getCategory().equals(filters.get("category"));
+                    }
+                    if (filters.get("freeShipping") != null) {
+                        matches = matches && product.getFreeShipping().equals(Boolean.parseBoolean(filters.get("freeShipping")));
+                    }
+                    if (filters.get("prestige") != null) {
+                        matches = matches && product.getPrestige().equals(Integer.parseInt(filters.get("prestige")));
+                    }
+                    return matches;
+                }).collect(Collectors.toList());
         if (order != null) {
-            if (order < 0 || order > 2) {
+            if (order < 0 || order > 3) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "No existe el método de ordenamiento elegido.");
             }
             orderList(result, order);

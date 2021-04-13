@@ -29,34 +29,10 @@ public class ProductRepositoryImpl implements ProductRepository {
         loadDataBase();
     }
 
-    /**
-     * Función generalizada para consultar los productos aplicando filtros.
-     * @param filters Mapa con todos los filtros de la consulta
-     * @return Retorna la lista de productos que coinciden con los filtros dados
-     */
-    @Override
-    public List<ProductDto> getProductsByFilters(Map<String, String> filters) {
-        return products.stream()
-            .filter(product -> {
-               boolean matches = true;
-               if (filters.get("name") != null) {
-                   matches = product.getName().equals(filters.get("name"));
-               }
-               if (filters.get("brand") != null) {
-                   matches = matches && product.getBrand().equals(filters.get("brand"));
-               }
-               if (filters.get("category") != null) {
-                   matches = matches && product.getCategory().equals(filters.get("category"));
-               }
-               if (filters.get("freeShipping") != null) {
-                   matches = matches && product.getFreeShipping().equals(Boolean.parseBoolean(filters.get("freeShipping")));
-               }
-               if (filters.get("prestige") != null) {
-                   matches = matches && product.getPrestige().equals(Integer.parseInt(filters.get("prestige")));
-               }
-               return matches;
-            }).collect(Collectors.toList());
+    public ArrayList<ProductDto> getProducts() {
+        return products;
     }
+
 
     /**
      * Dado el detalle de una orden de compra, retorna un mapa de todos los productos con sus precios.
@@ -67,7 +43,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     public HashMap<Integer, ProductDto> getProductsForPurchase(List<Integer> ids) {
         HashMap<Integer, ProductDto> productsFound = new HashMap<Integer, ProductDto>();
         // Busco cada producto de la orden en la base de datos de productos
-        for (ProductDto product: products) {
+        for (ProductDto product: getProducts()) {
             if (ids.contains(product.getProductId())) {
                 productsFound.put(product.getProductId(), product);
             }
@@ -146,7 +122,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             csvWriter.append("\n");
 
             // Cargo producto por producto
-            for (ProductDto product: products) {
+            for (ProductDto product: getProducts()) {
                 // Parseo prestigio
                 StringBuilder prestige = new StringBuilder();
                 for (int i = 0; i < product.getPrestige(); i++) {
@@ -205,7 +181,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             productDto.setQuantity(Integer.parseInt(parameters.get(5)));
             productDto.setFreeShipping(parameters.get(6).equals("SI"));
             productDto.setPrestige(parameters.get(7).split("").length);
-            products.add(productDto);
+            getProducts().add(productDto);
         }
     }
 
