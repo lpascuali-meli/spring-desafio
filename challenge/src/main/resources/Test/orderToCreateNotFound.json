@@ -1,0 +1,16 @@
+{
+  "articles": [
+    {
+      "productId": 9,
+      "brand": "Nike",
+      "name": "Altas llantas",
+      "quantity": 1
+    },
+    {
+      "productId": 10,
+      "name": "Adidas",
+      "brand": "La visera",
+      "quantity": 1
+    }
+  ]
+}

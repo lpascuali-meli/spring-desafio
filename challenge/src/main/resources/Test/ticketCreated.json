@@ -1,0 +1,18 @@
+{
+  "id": 1,
+  "articles": [
+    {
+      "productId": 0,
+      "brand": "Makita",
+      "name": "Desmalezadora",
+      "quantity": 1
+    },
+    {
+      "productId": 1,
+      "name": "Taladro",
+      "brand": "Black & Decker",
+      "quantity": 1
+    }
+  ],
+  "total": 22100
+}

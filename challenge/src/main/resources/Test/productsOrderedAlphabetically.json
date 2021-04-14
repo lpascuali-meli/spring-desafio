@@ -1,0 +1,42 @@
+[
+  {
+    "productId": 0,
+    "freeShipping": true,
+    "category": "Herramientas",
+    "name": "Desmalezadora",
+    "brand": "Makita",
+    "price": 9600,
+    "quantity": 5,
+    "prestige": 4
+  },
+  {
+    "productId": 2,
+    "freeShipping": true,
+    "category": "Herramientas",
+    "name": "Soldadora",
+    "brand": "Black & Decker",
+    "price": 7215,
+    "quantity": 10,
+    "prestige": 3
+  },
+  {
+    "productId": 1,
+    "freeShipping": true,
+    "category": "Deportes",
+    "name": "Taladro",
+    "brand": "Black & Decker",
+    "price": 12500,
+    "quantity": 7,
+    "prestige": 4
+  },
+  {
+    "productId": 3,
+    "freeShipping": true,
+    "category": "Deportes",
+    "name": "Zapatillas Deportivas",
+    "brand": "Nike",
+    "price": 14000,
+    "quantity": 4,
+    "prestige": 5
+  }
+]
